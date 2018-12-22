@@ -13,12 +13,11 @@ class City:
 
 
 def fitness_func(route):
-    print("route", route)
     pathDistance = 0.0
     for i, fromCity in enumerate(route):
         toCity = route[(i + 1) % len(route)]
         pathDistance += fromCity.distance(toCity)
-    return 1 / pathDistance
+    return pathDistance
 
 
 def create_individ(cities):
@@ -51,11 +50,14 @@ class TSPGeneticAlgo:
     def selection(self):
         selected = self.pop_ranked[:self.elite_size, 0]
         proba = self.pop_ranked[:, 1] / sum(self.pop_ranked[:, 1])
-        selected = np.concatenate((selected,
-                                   np.random.choice(self.pop_ranked[:, 0],
-                                                    len(self.pop_ranked) - self.elite_size,
-                                                    p=proba)))
+        choice = np.random.choice(self.pop_ranked[:, 0],
+                                  len(self.pop_ranked) - self.elite_size,
+                                  p=proba)
+        selected = np.hstack((selected, choice))
         return selected
+
+    def matingPool(self, selected):
+        return [self.pop[int(s)] for s in selected]
 
     def cross(self, parent1, parent2):
         gene_a = int(random.random() * len(parent1))
@@ -77,8 +79,8 @@ class TSPGeneticAlgo:
             parent2 = np.random.randint(0, len(parents))
             if parent2 == parent1:
                 parent2 = (parent2 + 1) % len(parents)
-            child = self.cross(self.pop[parent2], self.pop[parent1])
-            np.append(pop, child)
+            child = self.cross(parents[parent2], parents[parent1])
+            pop = np.vstack((pop, child))
         return pop
 
     def mutate(self, individual):
@@ -92,6 +94,13 @@ class TSPGeneticAlgo:
                 individual[swapped] = city2
                 individual[swap_with] = city1
         return individual
+
+    def mutate_population(self, population):
+        mutatedPop = []
+        for ind in range(0, len(self.pop)):
+            mutatedInd = self.mutate(population[ind])
+            mutatedPop.append(mutatedInd)
+        return mutatedPop
 
     # def mutate(self, pop):
     #     tmp = []
@@ -123,9 +132,9 @@ class TSPGeneticAlgo:
     def eval(self, generations=1):
         for i in range(generations):
             selected = self.selection()
-            new_pop = self.cross_population(selected)
-            new_pop_mut = self.mutate(new_pop)
-            print(new_pop_mut)
+            new_pop = self.matingPool(selected)
+            new_pop_cross = self.cross_population(new_pop)
+            new_pop_mut = self.mutate_population(new_pop_cross)
             self.pop = new_pop_mut
             self.pop_ranked = rank_individs(self.pop)
             self.history.append(self.pop_ranked[0][1])

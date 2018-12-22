@@ -7,7 +7,7 @@ data = pd.read_excel('data.xlsx')
 points = [City(i[1].x, i[1].y) for i in data.iterrows()]
 
 algo = TSPGeneticAlgo(points, 50, 10, 0.3)
-algo.eval(10000)
+algo.eval(1000)
 # e.draw_path(e.pop_ranked[0][0])
 # solution
 #
@@ -16,3 +16,4 @@ algo.eval(10000)
 # plt.plot(xs, ys, '-o')
 
 plt.plot(algo.history)
+plt.show()
