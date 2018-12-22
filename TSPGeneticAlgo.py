@@ -74,19 +74,18 @@ class TSPGeneticAlgo:
 
     def cross_population(self, parents):
         pop = parents[:self.elite_size]
-        for _ in range(self.pop_size - self.elite_size):
-            parent1 = np.random.randint(0, len(parents))
-            parent2 = np.random.randint(0, len(parents))
-            if parent2 == parent1:
-                parent2 = (parent2 + 1) % len(parents)
-            child = self.cross(parents[parent2], parents[parent1])
+        pool = random.sample(parents, len(parents))
+        for i in range(self.pop_size - self.elite_size):
+            parent1 = i
+            parent2 = len(parents) - i - 1
+            child = self.cross(pool[parent2], pool[parent1])
             pop = np.vstack((pop, child))
         return pop
 
     def mutate(self, individual):
         for swapped in range(len(individual)):
-            if np.random.random() < self.mutation_rate:
-                swap_with = int(np.random.random() * len(individual))
+            if random.random() < self.mutation_rate:
+                swap_with = int(random.random() * len(individual))
 
                 city1 = individual[swapped]
                 city2 = individual[swap_with]
@@ -102,33 +101,6 @@ class TSPGeneticAlgo:
             mutatedPop.append(mutatedInd)
         return mutatedPop
 
-    # def mutate(self, pop):
-    #     tmp = []
-    #     for i, individ in enumerate(pop):
-    #         if i < self.elite_size // 2:
-    #             if np.random.random() < 0.0:
-    #                 city1 = np.random.randint(0, len(individ))
-    #                 city2 = np.random.randint(0, len(individ))
-    #
-    #                 individ[city1], individ[city2] = individ[city2], individ[city1]
-    #
-    #         elif i > self.elite_size // 2 and i < self.elite_size:
-    #             if np.random.random() < self.mutation_rate / 2:
-    #                 city1 = np.random.randint(0, len(individ))
-    #                 city2 = np.random.randint(0, len(individ))
-    #
-    #                 individ[city1], individ[city2] = individ[city2], individ[city1]
-    #
-    #         elif np.random.random() < self.mutation_rate:
-    #             city1 = np.random.randint(0, len(individ))
-    #             city2 = np.random.randint(0, len(individ))
-    #
-    #             individ[city1], individ[city2] = individ[city2], individ[city1]
-    #
-    #         tmp.append((individ))
-    #
-    #     return tmp
-
     def eval(self, generations=1):
         for i in range(generations):
             selected = self.selection()
@@ -138,10 +110,10 @@ class TSPGeneticAlgo:
             self.pop = new_pop_mut
             self.pop_ranked = rank_individs(self.pop)
             self.history.append(self.pop_ranked[0][1])
+            print("generation:", i, "fitness", self.pop_ranked[0][1])
 
-            print('Best result now: {}'.format(self.pop_ranked[0][1]))
+    def get_path(self):
+        xs = [i.x for i in self.pop[int(self.pop_ranked[0][0])]]
+        ys = [i.y for i in self.pop[int(self.pop_ranked[0][0])]]
+        return xs, ys
 
-    def draw_path(self, individ):
-        xs = [i.x for i in self.pop[individ]]
-        ys = [i.y for i in self.pop[individ]]
-        plt.plot(xs, ys, '-o')
